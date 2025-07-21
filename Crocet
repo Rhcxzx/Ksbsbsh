@@ -1,194 +1,491 @@
--- Hub Minato — Steal a Brainrot Script
--- Interface organizada por seção
+createButton("🎯 TP em Cima da Base (com Brainrot)", function()
+    local hasBrainrot = false
 
+    -- Verifica se o jogador está segurando ou tem o item na mochila
+    for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:lower():find("brainrot") then
+            hasBrainrot = true
+            break
+        end
+    end
+
+    local charTool = Character:FindFirstChildOfClass("Tool")
+    if charTool and charTool.Name:lower():find("brainrot") then
+        hasBrainrot = true
+    end
+
+    if not hasBrainrot then
+        local warnLabel = Instance.new("TextLabel", ScreenGui)
+        warnLabel.Size = UDim2.new(0, 300, 0, 50)
+        warnLabel.Position = UDim2.new(0.5, -150, 0, 0)
+        warnLabel.Text = "❌ Você precisa estar com o Brainrot!"
+        warnLabel.TextColor3 = Color3.new(1, 0.5, 0.5)
+        warnLabel.BackgroundTransparency = 0.3
+        warnLabel.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+        warnLabel.TextScaled = true
+        task.delay(3, function() warnLabel:Destroy() end)
+        return
+    end
+
+    -- Procura inimigos e base
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local enemyHRP = player.Character.HumanoidRootPart
+
+            local foundBase = nil
+            for _, obj in pairs(workspace:GetChildren()) do
+                if obj:IsA("BasePart") and obj.Name:lower():find("base") then
+                    if (obj.Position - enemyHRP.Position).Magnitude < 100 then
+                        foundBase = obj
+                        break
+                    end
+                end
+            end
+
+            if foundBase then
+                Character:PivotTo(foundBase.CFrame + Vector3.new(0, 10, 0))
+                return
+            else
+                Character:PivotTo(enemyHRP.CFrame + Vector3.new(0, 30, 0))
+                return
+            end
+        end
+    end
+
+    local n = Instance.new("TextLabel", ScreenGui)
+    n.Size = UDim2.new(0, 300, 0, 50)
+    n.Position = UDim2.new(0.5, -150, 0, 0)
+    n.Text = "❌ Nenhum inimigo encontrado."
+    n.TextColor3 = Color3.new(1, 0.2, 0.2)
+    n.BackgroundTransparency = 0.4
+    n.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+    n.TextScaled = true
+    task.delay(3, function() n:Destroy() end)
+end)
+-- 📌 Botão flutuante para abrir/fechar menu principal (com imagem do Minato)
+local openButton = Instance.new("ImageButton", ScreenGui)
+openButton.Name = "OpenMinatoMenu"
+openButton.Size = UDim2.new(0, 60, 0, 60)
+openButton.Position = UDim2.new(0, 10, 1, -70)
+openButton.BackgroundTransparency = 0.2
+openButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+openButton.BorderSizePixel = 0
+openButton.Image = "rbxassetid://13068414756" -- ⬅️ ID do Minato (pode trocar)
+
+local label = Instance.new("TextLabel", openButton)
+label.Size = UDim2.new(1, 0, 0, 20)
+label.Position = UDim2.new(0, 0, 1, 0)
+label.Text = "Minato Hub"
+label.TextColor3 = Color3.new(1, 1, 0)
+label.TextScaled = true
+label.BackgroundTransparency = 1
+label.Font = Enum.Font.SourceSansBold
+
+-- Toggle da GUI
+openButton.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
+end)
+-- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "HubMinatoUI"
-ScreenGui.ResetOnSpawn = false
 
--- 🟨 GUI principal
+-- GUI principal
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "MinatoHub"
+
+-- Frame principal (menu)
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 300, 0, 450)
-Frame.Position = UDim2.new(0, 30, 0.5, -225)
+Frame.Size = UDim2.new(0, 300, 0, 400)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -200)
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
+Frame.Visible = false
 
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "🌀 Hub Minato"
-Title.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-Title.TextColor3 = Color3.new(0, 0, 0)
-Title.TextScaled = true
-Title.Font = Enum.Font.SourceSansBold
+-- Cabeçalho do menu com imagem e nome
+local header = Instance.new("Frame", Frame)
+header.Size = UDim2.new(1, 0, 0, 100)
+header.Position = UDim2.new(0, 0, 0, 0)
+header.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+header.BorderSizePixel = 0
 
-local UIList = Instance.new("UIListLayout", Frame)
-UIList.Padding = UDim.new(0, 6)
-UIList.FillDirection = Enum.FillDirection.Vertical
-UIList.SortOrder = Enum.SortOrder.LayoutOrder
+local minatoImage = Instance.new("ImageLabel", header)
+minatoImage.Size = UDim2.new(0, 80, 0, 80)
+minatoImage.Position = UDim2.new(0, 10, 0.5, -40)
+minatoImage.Image = "rbxassetid://13068414756"
+minatoImage.BackgroundTransparency = 1
 
-local function createButton(text, callback)
+local nameLabel = Instance.new("TextLabel", header)
+nameLabel.Size = UDim2.new(1, -100, 0, 30)
+nameLabel.Position = UDim2.new(0, 100, 0, 10)
+nameLabel.Text = "👤 " .. LocalPlayer.DisplayName
+nameLabel.Font = Enum.Font.SourceSansBold
+nameLabel.TextColor3 = Color3.new(1, 1, 1)
+nameLabel.TextScaled = true
+nameLabel.BackgroundTransparency = 1
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local titleLabel = Instance.new("TextLabel", header)
+titleLabel.Size = UDim2.new(1, -100, 0, 30)
+titleLabel.Position = UDim2.new(0, 100, 0, 50)
+titleLabel.Text = "🌀 Minato Hub"
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextColor3 = Color3.new(1, 1, 0)
+titleLabel.TextScaled = true
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Variável de controle de layout dos botões
+local yOffset = 100 -- Começa abaixo do header
+
+-- Função para criar seções
+local function createSection(title)
+	local section = Instance.new("TextLabel", Frame)
+	section.Size = UDim2.new(1, -20, 0, 30)
+	section.Position = UDim2.new(0, 10, 0, yOffset)
+	section.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	section.TextColor3 = Color3.new(1, 1, 0)
+	section.Font = Enum.Font.SourceSansBold
+	section.Text = title
+	section.TextScaled = true
+	section.BorderSizePixel = 0
+	yOffset = yOffset + 35
+end
+
+-- Função para criar botões no menu
+local function createButton(name, callback)
 	local btn = Instance.new("TextButton", Frame)
-	btn.Size = UDim2.new(1, -10, 0, 32)
-	btn.Position = UDim2.new(0, 5, 0, 0)
-	btn.Text = text
+	btn.Size = UDim2.new(1, -20, 0, 50)
+	btn.Position = UDim2.new(0, 10, 0, yOffset)
+	btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Text = name
+	btn.TextScaled = true
 	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 18
-	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	btn.TextColor3 = Color3.new(1, 1, 0)
-	btn.BorderSizePixel = 0
 	btn.MouseButton1Click:Connect(callback)
-	return btn
+	yOffset = yOffset + 55
 end
 
--- 🔄 Minimizar GUI
-local function toggleGUI() Frame.Visible = not Frame.Visible end
-createButton("🔄 Minimizar / Expandir GUI", toggleGUI)
+-- === Seção: Brainrot Tools ===
+createSection("🧠 Brainrot Tools")
 
--- 🔑 Keybind 'L'
-UserInputService.InputBegan:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.L then
-		ScreenGui.Enabled = not ScreenGui.Enabled
-	end
-end)
+-- Botão: TP em Cima da Base (com Brainrot)
+createButton("🎯 TP em Cima da Base (com Brainrot)", function()
+	local hasBrainrot = false
 
--- 🧭 MOVIMENTAÇÃO
-createButton("🦘 Pulo Alto", function()
-	local hum = Character:FindFirstChildWhichIsA("Humanoid")
-	if hum then hum.JumpPower = 150 end
-end)
-
-createButton("⚡ Speed Boost", function()
-	local hum = Character:FindFirstChildWhichIsA("Humanoid")
-	if hum then hum.WalkSpeed = 60 end
-end)
-
--- ESP Inimigos + Brainrot
-local espOn = false
-local function toggleESP()
-	espOn = not espOn
-	for _, p in pairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character then
-			local head = p.Character:FindFirstChild("Head")
-			if head then
-				local existing = head:FindFirstChild("ESP")
-				if espOn and not existing then
-					local bill = Instance.new("BillboardGui", head)
-					bill.Name = "ESP"
-					bill.Size = UDim2.new(0, 100, 0, 30)
-					bill.Adornee = head
-					bill.AlwaysOnTop = true
-					local lbl = Instance.new("TextLabel", bill)
-					lbl.Size = UDim2.new(1, 0, 1, 0)
-					lbl.BackgroundTransparency = 1
-					lbl.Text = "INIMIGO"
-					lbl.TextColor3 = Color3.new(1, 0, 0)
-					lbl.TextScaled = true
-				elseif not espOn and existing then
-					existing:Destroy()
-				end
-			end
-		end
-	end
-
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("Part") and obj.Name:lower():find("brain") then
-			local existing = obj:FindFirstChild("ESP")
-			if espOn and not existing then
-				local bill = Instance.new("BillboardGui", obj)
-				bill.Name = "ESP"
-				bill.Size = UDim2.new(0, 100, 0, 30)
-				bill.Adornee = obj
-				bill.AlwaysOnTop = true
-				local lbl = Instance.new("TextLabel", bill)
-				lbl.Size = UDim2.new(1, 0, 1, 0)
-				lbl.BackgroundTransparency = 1
-				lbl.Text = "🧠 BRAINROT"
-				lbl.TextColor3 = Color3.new(0, 1, 1)
-				lbl.TextScaled = true
-			elseif not espOn and existing then
-				existing:Destroy()
-			end
-		end
-	end
-end
-
-createButton("👁️ Toggle ESP", toggleESP)
-
--- 🏠 BASE & CASH
-createButton("🏠 TP para Base", function()
-	local base = workspace:FindFirstChild("Base") or workspace:FindFirstChild("YourBaseName")
-	if base then Character:PivotTo(base.CFrame + Vector3.new(0,5,0)) end
-end)
-
-local autoLock = false
-createButton("🔒 Auto Lock Base", function()
-	autoLock = not autoLock
-	task.spawn(function()
-		while autoLock do wait(1)
-			local r = game:GetService("ReplicatedStorage"):FindFirstChild("LockBase")
-			if r then r:FireServer() end
-		end
-	end)
-end)
-
-local autoCash = false
-createButton("💰 Auto Cash", function()
-	autoCash = not autoCash
-	task.spawn(function()
-		while autoCash do wait(0.5)
-			for _, p in pairs(workspace:GetDescendants()) do
-				if p:IsA("Part") and p.Name == "Cash" then
-					Character:PivotTo(p.CFrame + Vector3.new(0,3,0))
-				end
-			end
-		end
-	end)
-end)
-
--- 🚀 EXTRAS: Server Hop Inteligente
-local function lootRuim()
-	for _, p in pairs(workspace:GetDescendants()) do
-		if p:IsA("Part") and p.Name:lower():find("brain") then
-			local name = p.Name:lower()
-			if name:find("epic") or name:find("legend") or name:find("god") then
-				return false
-			end
-		end
-	end
-	return true
-end
-
-local function hop()
-	local data = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"))
-	for _, s in pairs(data.data) do
-		if s.playing < s.maxPlayers and s.id ~= game.JobId then
-			TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id)
+	for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+		if tool:IsA("Tool") and tool.Name:lower():find("brainrot") then
+			hasBrainrot = true
 			break
 		end
 	end
-end
 
-createButton("🚀 Smart Server Hop", function()
-	if lootRuim() then
-		hop()
-	else
-		local n = Instance.new("TextLabel", ScreenGui)
-		n.Size = UDim2.new(0, 300, 0, 50)
-		n.Position = UDim2.new(0.5, -150, 0, 0)
-		n.Text = "✅ Loot bom aqui! Nada a fazer."
-		n.TextColor3 = Color3.new(1, 1, 1)
-		n.BackgroundTransparency = 0.4
-		n.BackgroundColor3 = Color3.fromRGB(50, 205, 50)
-		n.TextScaled = true
-		wait(3); n:Destroy()
+	local charTool = Character:FindFirstChildOfClass("Tool")
+	if charTool and charTool.Name:lower():find("brainrot") then
+		hasBrainrot = true
 	end
+
+	if not hasBrainrot then
+		local warnLabel = Instance.new("TextLabel", ScreenGui)
+		warnLabel.Size = UDim2.new(0, 300, 0, 50)
+		warnLabel.Position = UDim2.new(0.5, -150, 0, 0)
+		warnLabel.Text = "❌ Você precisa estar com o Brainrot!"
+		warnLabel.TextColor3 = Color3.new(1, 0.5, 0.5)
+		warnLabel.BackgroundTransparency = 0.3
+		warnLabel.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+		warnLabel.TextScaled = true
+		task.delay(3, function() warnLabel:Destroy() end)
+		return
+	end
+
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local enemyHRP = player.Character.HumanoidRootPart
+			local foundBase = nil
+
+			for _, obj in pairs(workspace:GetChildren()) do
+				if obj:IsA("BasePart") and obj.Name:lower():find("base") then
+					if (obj.Position - enemyHRP.Position).Magnitude < 100 then
+						foundBase = obj
+						break
+					end
+				end
+			end
+
+			if foundBase then
+				Character:PivotTo(foundBase.CFrame + Vector3.new(0, 10, 0))
+				return
+			else
+				Character:PivotTo(enemyHRP.CFrame + Vector3.new(0, 30, 0))
+				return
+			end
+		end
+	end
+
+	local n = Instance.new("TextLabel", ScreenGui)
+	n.Size = UDim2.new(0, 300, 0, 50)
+	n.Position = UDim2.new(0.5, -150, 0, 0)
+	n.Text = "❌ Nenhum inimigo encontrado."
+	n.TextColor3 = Color3.new(1, 0.2, 0.2)
+	n.BackgroundTransparency = 0.4
+	n.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+	n.TextScaled = true
+	task.delay(3, function() n:Destroy() end)
 end)
+
+-- === Botão flutuante para abrir/fechar o menu ===
+local openButton = Instance.new("ImageButton", ScreenGui)
+openButton.Name = "OpenMinatoMenu"
+openButton.Size = UDim2.new(0, 60, 0, 60)
+openButton.Position = UDim2.new(0, 10, 1, -70)
+openButton.BackgroundTransparency = 0.2
+openButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+openButton.BorderSizePixel = 0
+openButton.Image = "rbxassetid://13068414756"
+
+local label = Instance.new("TextLabel", openButton)
+label.Size = UDim2.new(1, 0, 0, 20)
+label.Position = UDim2.new(0, 0, 1, 0)
+label.Text = "Minato Hub"
+label.TextColor3 = Color3.new(1, 1, 0)
+label.TextScaled = true
+label.BackgroundTransparency = 1
+label.Font = Enum.Font.SourceSansBold
+
+openButton.MouseButton1Click:Connect(function()
+	Frame.Visible = not Frame.Visible
+end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
