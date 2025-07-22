@@ -1,0 +1,273 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local basePos = CFrame.new(100, 3, 50)
+local cimaDaBasePos = basePos + Vector3.new(0, 35, 0)
+
+pcall(function()
+	local hum = Character:WaitForChild("Humanoid")
+	hum.BreakJointsOnDeath = false
+	hum.Health = 100
+end)
+
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local oldNamecall = mt.__namecall
+
+mt.__namecall = newcclosure(function(self, ...)
+	local method = getnamecallmethod()
+	if tostring(self):lower():find("minato") or tostring(self):lower():find("jesus") then
+		if method == "Destroy" or method == "Remove" then
+			warn("[ANTI-REMOVER] Bloqueado: " .. tostring(self))
+			return
+		end
+	end
+	return oldNamecall(self, ...)
+end)
+
+local function serverHop()
+	local PlaceId = game.PlaceId
+	local servers = {}
+	local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+	local success, response = pcall(function()
+		return HttpService:JSONDecode(game:HttpGet(url))
+	end)
+
+	if success then
+		for _, server in pairs(response.data) do
+			if server.playing < server.maxPlayers and server.id ~= game.JobId then
+				TeleportService:TeleportToPlaceInstance(PlaceId, server.id, LocalPlayer)
+				break
+			end
+		end
+	end
+end
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "MenuDoJesus_Minato"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 200, 0, 250)
+Frame.Position = UDim2.new(0.01, 0, 0.4, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.1
+
+local JesusText = Instance.new("TextLabel", Frame)
+JesusText.Size = UDim2.new(1, 0, 0, 40)
+JesusText.Position = UDim2.new(0, 0, 0, 0)
+JesusText.Text = "✝️ Jesus está com você"
+JesusText.TextColor3 = Color3.fromRGB(255, 255, 255)
+JesusText.TextStrokeTransparency = 0
+JesusText.BackgroundTransparency = 1
+JesusText.Font = Enum.Font.GothamBold
+JesusText.TextSize = 15
+
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton", Frame)
+	btn.Size = UDim2.new(1, -10, 0, 35)
+	btn.Position = UDim2.new(0, 5, 0, 50 + (#Frame:GetChildren() - 2) * 40)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.BorderSizePixel = 0
+	btn.Text = text
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 14
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+createButton("📍 TP Base", function()
+	Character:PivotTo(basePos)
+end)
+
+createButton("⛅ TP Cima da Base", function()
+	Character:PivotTo(cimaDaBasePos)
+end)
+
+createButton("🔁 Server Hop", function()
+	serverHop()
+end)
+
+createButton("❌ Fechar", function()
+	ScreenGui:Destroy()
+end)
+
+local function verificarAdmins()
+	for _, p in pairs(Players:GetPlayers()) do
+		local name = p.DisplayName or p.Name
+		if string.find(name:lower(), "mod") or string.find(name:lower(), "admin") or string.find(name:lower(), "dev") then
+			warn("⚠️ Admin detectado! Pulando de servidor...")
+			serverHop()
+			break
+		end
+	end
+end
+
+task.spawn(function()
+	while true do
+		task.wait(5)
+		verificarAdmins()
+	end
+end)
+
+print("[✅] Hub Minato - Menu do Jesus carregado.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
