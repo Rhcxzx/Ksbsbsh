@@ -5,7 +5,7 @@ local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local basePos = CFrame.new(100, 3, 50)
+local basePos = CFrame.new(-471, -7, 220)
 local cimaDaBasePos = basePos + Vector3.new(0, 35, 0)
 
 pcall(function()
