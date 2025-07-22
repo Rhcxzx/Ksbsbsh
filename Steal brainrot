@@ -1,0 +1,132 @@
+local s=game:GetService("Players")
+local t=game:GetService("TeleportService")
+local u=game:GetService("HttpService")
+local v=game:GetService("RunService")
+local w=game:GetService("TweenService")
+local x=s.LocalPlayer
+local y=game.CoreGui
+local z=Vector3.new(-471,-3,210)
+local A=Vector3.new(-471,32,210)
+
+pcall(function()
+    local B=x.Character or x.CharacterAdded:Wait()
+    local C=B:FindFirstChildOfClass("Humanoid")
+    if C then
+        C.BreakJointsOnDeath=false
+        C.Health=100
+    end
+end)
+
+local D=getrawmetatable(game)
+setreadonly(D,false)
+local E=D.__namecall
+D.__namecall=newcclosure(function(F,...)
+    local G=getnamecallmethod()
+    if tostring(F):lower():find("minato") then
+        if G=="Destroy" or G=="Remove" then return nil end
+    end
+    return E(F,...)
+end)
+
+local H=Instance.new("ScreenGui",y)
+H.ResetOnSpawn=false
+local I=Instance.new("ImageLabel",H)
+I.Size=UDim2.new(0,250,0,70)
+I.Position=UDim2.new(0,60,0.25,0)
+I.BackgroundTransparency=1
+I.Image="rbxassetid://0" -- Altere para o ID da imagem "Hub Minato"
+
+local J=Instance.new("Frame",H)
+J.Size=UDim2.new(0,240,0,330)
+J.Position=UDim2.new(0,60,0.4,0)
+J.BackgroundColor3=Color3.fromRGB(30,30,30)
+J.BorderSizePixel=0
+J.Active=true
+J.Draggable=true
+J.Visible=false
+Instance.new("UICorner",J).CornerRadius=UDim.new(0,8)
+local K=Instance.new("UIGradient",J)
+K.Rotation=45
+K.Color=ColorSequence.new(
+    ColorSequenceKeypoint.new(0,Color3.fromRGB(0,85,255)),
+    ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,0))
+)
+w:Create(K,TweenInfo.new(5,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,-1),{Rotation=360}):Play()
+
+local L=20
+local function M(N)
+    local O=Instance.new("TextButton",J)
+    O.Size=UDim2.new(0.9,0,0,30)
+    O.Position=UDim2.new(0.05,0,0,L)
+    O.BackgroundColor3=Color3.fromRGB(50,60,200)
+    O.TextColor3=Color3.new(1,1,1)
+    O.Font=Enum.Font.Gotham
+    O.Text=""
+    O.TextSize=1
+    O.TextTransparency=1
+    O.BorderSizePixel=0
+    Instance.new("UICorner",O).CornerRadius=UDim.new(0,6)
+    O.MouseButton1Click:Connect(N)
+    L+=35
+end
+
+M(function() local P=x.Character or x.CharacterAdded:Wait() P:PivotTo(CFrame.new(z)) end)
+M(function() local P=x.Character or x.CharacterAdded:Wait() P:PivotTo(CFrame.new(A)) end)
+M(function()
+    local Q=game.PlaceId
+    local R="https://games.roblox.com/v1/games/"..Q.."/servers/Public?sortOrder=Asc&limit=100"
+    local S,T=pcall(function() return u:JSONDecode(game:HttpGet(R)) end)
+    if S then for _,U in pairs(T.data) do if U.playing<U.maxPlayers and U.id~=game.JobId then t:TeleportToPlaceInstance(Q,U.id,x) break end end end
+end)
+M(function() J.Visible=false end)
+
+local V=Instance.new("TextButton",H)
+V.Size=UDim2.new(0,40,0,40)
+V.Position=UDim2.new(0,10,0.5,-20)
+V.BackgroundColor3=Color3.fromRGB(0,85,255)
+V.Text=""
+V.BorderSizePixel=0
+Instance.new("UICorner",V).CornerRadius=UDim.new(1,0)
+V.MouseButton1Click:Connect(function() J.Visible=not J.Visible end)
+
+for _,W in pairs(s:GetPlayers()) do
+    if W~=x then
+        local X=Instance.new("BillboardGui",W.Character:WaitForChild("Head"))
+        X.Size=UDim2.new(0,100,0,40)
+        X.AlwaysOnTop=true
+        local Y=Instance.new("TextLabel",X)
+        Y.Size=UDim2.new(1,0,1,0)
+        Y.BackgroundTransparency=1
+        Y.Text=W.Name
+        Y.TextColor3=Color3.new(1,0,0)
+        Y.TextStrokeTransparency=0
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        local Z=x.Character and x.Character:FindFirstChild("HumanoidRootPart")
+        if Z then
+            for _,_ in pairs(workspace:GetDescendants()) do
+                if _.Name=="Cash" and _.IsA and _.IsA(_.ClassName) then
+                    Z.CFrame=_.CFrame+Vector3.new(0,3,0)
+                    break
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(5)
+        for _,a0 in pairs(s:GetPlayers()) do
+            local a1=a0.DisplayName or a0.Name
+            if a1:lower():find("admin") or a1:lower():find("mod") or a1:lower():find("dev") then
+                t:Teleport(game.PlaceId)
+                break
+            end
+        end
+    end
+end)
