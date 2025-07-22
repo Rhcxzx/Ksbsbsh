@@ -1,164 +1,177 @@
+--[[
+  Script Lua: Menu Acuires sem inscrições/textos
+  Recursos:
+    - Menu com cores acuires
+    - Abre/fecha com animação
+    - Opções separadas: TP Base, JM Speed, Pulo 230, Pulo Infinito
+    - GUI arrastável (mobile)
+    - Botões sem textos, apenas cor e função
+    - TP Base: cordenadas -471 -7 220
+    - JM Speed: 67
+    - Pulo: 230
+    - Pulo infinito: toggle
+]]
+
+local acuiresColors = {
+    Color3.fromRGB(0, 255, 255),
+    Color3.fromRGB(0, 200, 255),
+    Color3.fromRGB(0, 120, 255),
+    Color3.fromRGB(0, 255, 200)
+}
+
+local menuOpen = false
+local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
-local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:FindFirstChildWhichIsA("Humanoid")
+local gui = Instance.new("ScreenGui")
+gui.Name = "AcuiresMenu"
+gui.Parent = game.CoreGui
 
-local LocalPlayer = Players.LocalPlayer
-local CoreGui = game.CoreGui
-
-local PosBase = Vector3.new(-471, -3, 210)
-local PosCimaBase = Vector3.new(-471, 32, 210)
-
-pcall(function()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.BreakJointsOnDeath = false
-        hum.Health = 100
-    end
-end)
-
-local mt = getrawmetatable(game)
-setreadonly(mt, false)
-local oldNamecall = mt.__namecall
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    if tostring(self):lower():find("minato") then
-        if method == "Destroy" or method == "Remove" then
-            return nil
-        end
-    end
-    return oldNamecall(self, ...)
-end)
-
-local gui = Instance.new("ScreenGui", CoreGui)
-gui.ResetOnSpawn = false
-
-local logo = Instance.new("ImageLabel", gui)
-logo.Size = UDim2.new(0, 250, 0, 70)
-logo.Position = UDim2.new(0, 60, 0.25, 0)
-logo.BackgroundTransparency = 1
-logo.Image = "rbxassetid://0"
-
-local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.new(0, 240, 0, 330)
-menu.Position = UDim2.new(0, 60, 0.4, 0)
-menu.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-menu.BorderSizePixel = 0
-menu.Active = true
-menu.Draggable = true
-menu.Visible = false
-Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
-
-local gradient = Instance.new("UIGradient", menu)
-gradient.Rotation = 45
-gradient.Color = ColorSequence.new(
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 85, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
-)
-TweenService:Create(gradient, TweenInfo.new(5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Rotation = 360}):Play()
-
-local yPos = 20
-local function criarBotao(callback)
-    local botao = Instance.new("TextButton", menu)
-    botao.Size = UDim2.new(0.9, 0, 0, 30)
-    botao.Position = UDim2.new(0.05, 0, 0, yPos)
-    botao.BackgroundColor3 = Color3.fromRGB(50, 60, 200)
-    botao.Text = ""
-    botao.TextSize = 1
-    botao.TextTransparency = 1
-    botao.BorderSizePixel = 0
-    Instance.new("UICorner", botao).CornerRadius = UDim.new(0, 6)
-    botao.MouseButton1Click:Connect(callback)
-    yPos += 35
-end
-
-criarBotao(function()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    char:PivotTo(CFrame.new(PosBase))
-end)
-
-criarBotao(function()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    char:PivotTo(CFrame.new(PosCimaBase))
-end)
-
-criarBotao(function()
-    local placeId = game.PlaceId
-    local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
-    local success, result = pcall(function()
-        return HttpService:JSONDecode(game:HttpGet(url))
-    end)
-    if success then
-        for _, server in pairs(result.data) do
-            if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                TeleportService:TeleportToPlaceInstance(placeId, server.id, LocalPlayer)
-                break
-            end
-        end
-    end
-end)
-
-criarBotao(function()
-    menu.Visible = false
-end)
-
-local toggleBtn = Instance.new("TextButton", gui)
-toggleBtn.Size = UDim2.new(0, 40, 0, 40)
-toggleBtn.Position = UDim2.new(0, 10, 0.5, -20)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
-toggleBtn.Text = ""
-toggleBtn.TextSize = 1
-toggleBtn.TextTransparency = 1
-toggleBtn.BorderSizePixel = 0
-Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
-toggleBtn.MouseButton1Click:Connect(function()
-    menu.Visible = not menu.Visible
-end)
-
-for _, plr in pairs(Players:GetPlayers()) do
-    if plr ~= LocalPlayer then
-        local head = plr.Character and plr.Character:FindFirstChild("Head")
-        if head then
-            local esp = Instance.new("BillboardGui", head)
-            esp.Size = UDim2.new(0, 100, 0, 40)
-            esp.AlwaysOnTop = true
-
-            local label = Instance.new("TextLabel", esp)
-            label.Size = UDim2.new(1, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = ""
-            label.TextColor3 = Color3.new(1, 0, 0)
-            label.TextStrokeTransparency = 0
-        end
-    end
-end
-
-task.spawn(function()
-    while true do
-        task.wait(1)
-        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj.Name == "Cash" and typeof(obj) == "Instance" and obj:IsA("BasePart") then
-                    hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                    break
+local function makeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
                 end
-            end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 250, 0, 330)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -165)
+mainFrame.BackgroundColor3 = acuiresColors[1]
+mainFrame.BorderSizePixel = 0
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.Visible = false
+mainFrame.Parent = gui
+makeDraggable(mainFrame)
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 60, 0, 60)
+toggleBtn.Position = UDim2.new(0, 10, 0, 10)
+toggleBtn.BackgroundColor3 = acuiresColors[2]
+toggleBtn.Text = ""
+toggleBtn.Parent = gui
+
+local function animateMenu(open)
+    mainFrame.Visible = true
+    if open then
+        mainFrame:TweenSize(UDim2.new(0, 250, 0, 330), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
+    else
+        mainFrame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.3, true, function()
+            mainFrame.Visible = false
+        end)
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+    menuOpen = not menuOpen
+    animateMenu(menuOpen)
+end)
+
+local tpBase = Instance.new("Frame")
+tpBase.Size = UDim2.new(1, -20, 0, 60)
+tpBase.Position = UDim2.new(0, 10, 0, 10)
+tpBase.BackgroundColor3 = acuiresColors[3]
+tpBase.Parent = mainFrame
+
+local tpBtn = Instance.new("TextButton")
+tpBtn.Size = UDim2.new(0, 45, 0, 40)
+tpBtn.Position = UDim2.new(0.5, -22, 0.5, -20)
+tpBtn.BackgroundColor3 = acuiresColors[1]
+tpBtn.Text = ""
+tpBtn.Parent = tpBase
+
+tpBtn.MouseButton1Click:Connect(function()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = CFrame.new(-471, -7, 220)
+    end
+end)
+
+local speedFrame = Instance.new("Frame")
+speedFrame.Size = UDim2.new(1, -20, 0, 60)
+speedFrame.Position = UDim2.new(0, 10, 0, 80)
+speedFrame.BackgroundColor3 = acuiresColors[4]
+speedFrame.Parent = mainFrame
+
+local speedBtn = Instance.new("TextButton")
+speedBtn.Size = UDim2.new(0, 45, 0, 40)
+speedBtn.Position = UDim2.new(0.5, -22, 0.5, -20)
+speedBtn.BackgroundColor3 = acuiresColors[2]
+speedBtn.Text = ""
+speedBtn.Parent = speedFrame
+
+speedBtn.MouseButton1Click:Connect(function()
+    hum.WalkSpeed = 67
+end)
+
+local jumpFrame = Instance.new("Frame")
+jumpFrame.Size = UDim2.new(1, -20, 0, 60)
+jumpFrame.Position = UDim2.new(0, 10, 0, 150)
+jumpFrame.BackgroundColor3 = acuiresColors[1]
+jumpFrame.Parent = mainFrame
+
+local jumpBtn = Instance.new("TextButton")
+jumpBtn.Size = UDim2.new(0, 45, 0, 40)
+jumpBtn.Position = UDim2.new(0.5, -22, 0.5, -20)
+jumpBtn.BackgroundColor3 = acuiresColors[3]
+jumpBtn.Text = ""
+jumpBtn.Parent = jumpFrame
+
+jumpBtn.MouseButton1Click:Connect(function()
+    hum.JumpPower = 230
+end)
+
+local infJumpFrame = Instance.new("Frame")
+infJumpFrame.Size = UDim2.new(1, -20, 0, 60)
+infJumpFrame.Position = UDim2.new(0, 10, 0, 220)
+infJumpFrame.BackgroundColor3 = acuiresColors[2]
+infJumpFrame.Parent = mainFrame
+
+local infJumpBtn = Instance.new("TextButton")
+infJumpBtn.Size = UDim2.new(0, 45, 0, 40)
+infJumpBtn.Position = UDim2.new(0.5, -22, 0.5, -20)
+infJumpBtn.BackgroundColor3 = acuiresColors[4]
+infJumpBtn.Text = ""
+infJumpBtn.Parent = infJumpFrame
+
+local infJump = false
+local infJumpConn
+
+infJumpBtn.MouseButton1Click:Connect(function()
+    infJump = not infJump
+    if infJump then
+        infJumpBtn.BackgroundColor3 = acuiresColors[1]
+        infJumpConn = UserInputService.JumpRequest:Connect(function()
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
+    else
+        infJumpBtn.BackgroundColor3 = acuiresColors[4]
+        if infJumpConn then
+            infJumpConn:Disconnect()
         end
     end
 end)
 
-task.spawn(function()
-    while true do
-        task.wait(5)
-        for _, plr in pairs(Players:GetPlayers()) do
-            local nome = plr.DisplayName or plr.Name
-            local lower = nome:lower()
-            if lower:find("admin") or lower:find("mod") or lower:find("dev") then
-                TeleportService:Teleport(game.PlaceId)
-                break
-            end
-        end
-    end
-end)
+if UserInputService.TouchEnabled then
+    toggleBtn.Size = UDim2.new(0, 80, 0, 80)
+end
+
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+mainFrame.Visible = false
